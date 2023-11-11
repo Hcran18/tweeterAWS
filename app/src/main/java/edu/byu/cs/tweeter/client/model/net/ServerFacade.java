@@ -4,9 +4,11 @@ import java.io.IOException;
 
 import edu.byu.cs.tweeter.model.net.TweeterRemoteException;
 import edu.byu.cs.tweeter.model.net.request.FollowingRequest;
+import edu.byu.cs.tweeter.model.net.request.GetUserRequest;
 import edu.byu.cs.tweeter.model.net.request.LoginRequest;
 import edu.byu.cs.tweeter.model.net.request.RegisterRequest;
 import edu.byu.cs.tweeter.model.net.response.FollowingResponse;
+import edu.byu.cs.tweeter.model.net.response.GetUserResponse;
 import edu.byu.cs.tweeter.model.net.response.LoginResponse;
 import edu.byu.cs.tweeter.model.net.response.RegisterResponse;
 
@@ -28,11 +30,13 @@ public class ServerFacade {
      * @param request contains all information needed to perform a login.
      * @return the login response.
      */
-    public LoginResponse login(LoginRequest request, String urlPath) throws IOException, TweeterRemoteException {
+    public LoginResponse login(LoginRequest request, String urlPath)
+            throws IOException, TweeterRemoteException {
         return clientCommunicator.doPost(urlPath, request, null, LoginResponse.class);
     }
 
-    public RegisterResponse register(RegisterRequest request, String urlPath) throws IOException, TweeterRemoteException {
+    public RegisterResponse register(RegisterRequest request, String urlPath)
+            throws IOException, TweeterRemoteException {
         return clientCommunicator.doPost(urlPath, request, null, RegisterResponse.class);
     }
 
@@ -48,5 +52,10 @@ public class ServerFacade {
     public FollowingResponse getFollowees(FollowingRequest request, String urlPath)
             throws IOException, TweeterRemoteException {
         return clientCommunicator.doPost(urlPath, request, null, FollowingResponse.class);
+    }
+
+    public GetUserResponse getUser(GetUserRequest request, String urlPath)
+            throws IOException, TweeterRemoteException {
+        return clientCommunicator.doPost(urlPath, request, null, GetUserResponse.class);
     }
 }
