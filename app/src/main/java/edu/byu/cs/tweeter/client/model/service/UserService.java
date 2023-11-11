@@ -16,6 +16,7 @@ import edu.byu.cs.tweeter.model.domain.User;
 
 public class UserService extends Service {
     public static final String URL_PATH_LOGIN = "/login";
+    public static final String URL_PATH_LOGOUT = "/logout";
     public static final String URL_PATH_REGISTER = "/register";
     public static final String URL_PATH_GET_USER = "/getuser";
 
