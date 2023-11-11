@@ -25,6 +25,7 @@ public class FollowService extends Service {
 
     public static final String URL_PATH_GET_FOLLOWING = "/getfollowing";
     public static final String URL_PATH_IS_FOLLOWER = "/isfollower";
+    public static final String URL_PATH_UNFOLLOW = "/unfollow";
 
     public interface FollowObserver extends Service.ServiceObserver {
 
@@ -50,6 +51,7 @@ public class FollowService extends Service {
                 user, pageSize, lastFollowee, new GetFollowingHandler(observer)));
     }
 
+    //TODO: Create the Lambda for this
     public void loadMoreFollowers(AuthToken currUserAuthToken, User user, int pageSize, User lastFollower, FollowObserver observer) {
         executeTask(new GetFollowersTask(currUserAuthToken,
                 user, pageSize, lastFollower, new GetFollowersHandler(observer)));
@@ -74,10 +76,6 @@ public class FollowService extends Service {
         display(observer, selectedUser, "Adding ");
     }
 
-    private void display(FollowObserver observer, User selectedUser, String message) {
-        observer.displayMessage(message + selectedUser.getName() + "...");
-    }
-
     public void updateFollowingAndFollowers(AuthToken currUserAuthToken, User selectedUser, FollowObserver observer) {
         ExecutorService executor = Executors.newFixedThreadPool(2);
 
@@ -92,5 +90,9 @@ public class FollowService extends Service {
 
     private void executeFollowingFollowers(Runnable task, ExecutorService executor) {
         executor.execute(task);
+    }
+
+    private void display(FollowObserver observer, User selectedUser, String message) {
+        observer.displayMessage(message + selectedUser.getName() + "...");
     }
 }
