@@ -14,7 +14,7 @@ public abstract class GetCountTask extends AuthenticatedTask {
      * The user whose count is being retrieved.
      * (This can be any user, not just the currently logged-in user.)
      */
-    private final User targetUser;
+    protected final User targetUser;
 
     private int count;
 
@@ -29,10 +29,13 @@ public abstract class GetCountTask extends AuthenticatedTask {
 
     @Override
     protected void runTask() {
-        count = runCountTask();
+        int followCount = runCountTask();
 
         // Call sendSuccessMessage if successful
-        sendSuccessMessage();
+        if (followCount != -1) {
+            count = runCountTask();
+            sendSuccessMessage();
+        }
         // or call sendFailedMessage if not successful
         // sendFailedMessage()
     }
