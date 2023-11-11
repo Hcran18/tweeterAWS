@@ -4,9 +4,11 @@ import java.util.List;
 import java.util.Random;
 
 import edu.byu.cs.tweeter.model.domain.User;
+import edu.byu.cs.tweeter.model.net.request.FollowRequest;
 import edu.byu.cs.tweeter.model.net.request.FollowingRequest;
 import edu.byu.cs.tweeter.model.net.request.IsFollowerRequest;
 import edu.byu.cs.tweeter.model.net.request.UnfollowRequest;
+import edu.byu.cs.tweeter.model.net.response.FollowResponse;
 import edu.byu.cs.tweeter.model.net.response.FollowingResponse;
 import edu.byu.cs.tweeter.model.net.response.IsFollowerResponse;
 import edu.byu.cs.tweeter.model.net.response.UnfollowResponse;
@@ -61,6 +63,16 @@ public class FollowService {
         }
 
         return new UnfollowResponse();
+    }
+
+    public FollowResponse follow(FollowRequest request) {
+        if (request.getFollowee() == null) {
+            throw new RuntimeException("[Bad Request] Request needs to have a followee");
+        } else if (request.getAuthToken() == null) {
+            throw new RuntimeException("[Bad Request] Request needs to have an Authtoken");
+        }
+
+        return new FollowResponse();
     }
 
     /**
