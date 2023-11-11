@@ -23,7 +23,8 @@ import edu.byu.cs.tweeter.model.domain.User;
 
 public class FollowService extends Service {
 
-    public static final String URL_PATH = "/getfollowing";
+    public static final String URL_PATH_GET_FOLLOWING = "/getfollowing";
+    public static final String URL_PATH_IS_FOLLOWER = "/isfollower";
 
     public interface FollowObserver extends Service.ServiceObserver {
 
@@ -45,8 +46,8 @@ public class FollowService extends Service {
     }
 
     public void loadMoreFollowing(AuthToken currUserAuthToken, User user, int pageSize, User lastFollowee, FollowObserver observer) {
-        GetFollowingTask followingTask = new GetFollowingTask(currUserAuthToken, user, pageSize, lastFollowee, new GetFollowingHandler(observer));
-        executeTask(followingTask);
+        executeTask(new GetFollowingTask(currUserAuthToken,
+                user, pageSize, lastFollowee, new GetFollowingHandler(observer)));
     }
 
     public void loadMoreFollowers(AuthToken currUserAuthToken, User user, int pageSize, User lastFollower, FollowObserver observer) {
