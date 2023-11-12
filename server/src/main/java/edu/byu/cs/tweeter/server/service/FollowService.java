@@ -5,12 +5,14 @@ import java.util.Random;
 
 import edu.byu.cs.tweeter.model.domain.User;
 import edu.byu.cs.tweeter.model.net.request.FollowRequest;
+import edu.byu.cs.tweeter.model.net.request.FollowerRequest;
 import edu.byu.cs.tweeter.model.net.request.FollowingRequest;
 import edu.byu.cs.tweeter.model.net.request.GetFollowersCountRequest;
 import edu.byu.cs.tweeter.model.net.request.GetFollowingCountRequest;
 import edu.byu.cs.tweeter.model.net.request.IsFollowerRequest;
 import edu.byu.cs.tweeter.model.net.request.UnfollowRequest;
 import edu.byu.cs.tweeter.model.net.response.FollowResponse;
+import edu.byu.cs.tweeter.model.net.response.FollowerResponse;
 import edu.byu.cs.tweeter.model.net.response.FollowingResponse;
 import edu.byu.cs.tweeter.model.net.response.GetFollowersCountResponse;
 import edu.byu.cs.tweeter.model.net.response.GetFollowingCountResponse;
@@ -43,6 +45,19 @@ public class FollowService {
 
         Pair<List<User>, Boolean> pair = getFollowingDAO().getFollowees(request.getFollowerAlias(), request.getLimit(), request.getLastFolloweeAlias());
         return new FollowingResponse(pair.getFirst(), pair.getSecond());
+    }
+
+    public FollowerResponse getFollowers(FollowerRequest request) {
+        if (request.getTargetUserAlias() == null) {
+            throw new RuntimeException("[Bad Request] Request needs to have a target user");
+        } else if (request.getAuthToken() == null) {
+            throw new RuntimeException("[Bad Request] Request needs to have an Authtoken");
+        } else if (request.getLimit() <= 0) {
+            throw new RuntimeException("[Bad Request] Request needs to have a positive limit");
+        }
+
+        Pair<List<User>, Boolean> pair = getFollowingDAO().getFollowers(request.getTargetUserAlias(), request.getLimit(), request.getLastFollowerAlias());
+        return new FollowerResponse(pair.getFirst(), pair.getSecond());
     }
 
     public IsFollowerResponse isFollower(IsFollowerRequest request) {

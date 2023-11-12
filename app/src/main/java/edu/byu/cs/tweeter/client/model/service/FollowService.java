@@ -24,6 +24,7 @@ import edu.byu.cs.tweeter.model.domain.User;
 public class FollowService extends Service {
 
     public static final String URL_PATH_GET_FOLLOWING = "/getfollowing";
+    public static final String URL_PATH_GET_FOLLOWERS = "/getfollowers";
     public static final String URL_PATH_IS_FOLLOWER = "/isfollower";
     public static final String URL_PATH_UNFOLLOW = "/unfollow";
     public static final String URL_PATH_FOLLOW = "/follow";

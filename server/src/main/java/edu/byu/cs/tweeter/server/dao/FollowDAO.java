@@ -92,6 +92,13 @@ public class FollowDAO {
         return followeesIndex;
     }
 
+    public Pair<List<User>, Boolean> getFollowers(String targetUserAlias, int limit, String lastFollowerAlias) {
+        User targetUser = getFakeData().findUserByAlias(targetUserAlias);
+        User lastFollower = getFakeData().findUserByAlias(lastFollowerAlias);
+        
+        return getFakeData().getPageOfUsers(lastFollower, limit, targetUser);
+    }
+
     /**
      * Returns the list of dummy followee data. This is written as a separate method to allow
      * mocking of the followees.

@@ -67,9 +67,6 @@ public abstract class PagedTask<T> extends AuthenticatedTask {
     protected final void runTask() throws IOException {
         Pair<List<T>, Boolean> pageOfItems = getItems();
 
-        items = pageOfItems.getFirst();
-        hasMorePages = pageOfItems.getSecond();
-
         // Call sendSuccessMessage if successful
         if (pageOfItems != null) {
             items = pageOfItems.getFirst();

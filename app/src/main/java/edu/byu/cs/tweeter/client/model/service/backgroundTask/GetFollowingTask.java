@@ -31,7 +31,7 @@ public class GetFollowingTask extends PagedUserTask {
             String targetUserAlias = targetUser == null ? null : targetUser.getAlias();
             String lastFolloweeAlias = lastItem == null ? null : lastItem.getAlias();
 
-            FollowingRequest request = new FollowingRequest(getAuthToken(), targetUserAlias, limit, lastFolloweeAlias);
+            FollowingRequest request = new FollowingRequest(authToken, targetUserAlias, limit, lastFolloweeAlias);
             FollowingResponse response = getServerFacade().getFollowees(request, FollowService.URL_PATH_GET_FOLLOWING);
 
             if (response.isSuccess()) {
