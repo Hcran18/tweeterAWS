@@ -28,6 +28,7 @@ public class FollowService extends Service {
     public static final String URL_PATH_UNFOLLOW = "/unfollow";
     public static final String URL_PATH_FOLLOW = "/follow";
     public static final String URL_PATH_GET_FOLLOWERS_COUNT = "/getfollowerscount";
+    public static final String URL_PATH_GET_FOLLOWING_COUNT = "/getfollowingcount";
 
     public interface FollowObserver extends Service.ServiceObserver {
 
