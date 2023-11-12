@@ -13,9 +13,9 @@ import edu.byu.cs.tweeter.model.domain.Status;
 import edu.byu.cs.tweeter.model.domain.User;
 
 public class StatusService extends Service {
+    public static final String URL_PATH_POST_STATUS= "/poststatus";
 
     public interface StatusObserver extends Service.ServiceObserver {
-
         void addMoreStatuses(List<Status> statuses, boolean hasMorePages);
 
         void postSuccess(String s);
