@@ -1,5 +1,7 @@
 package edu.byu.cs.tweeter.server.dao;
 
+import com.google.inject.Inject;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -10,7 +12,7 @@ import edu.byu.cs.tweeter.util.Pair;
 /**
  * A DAO for accessing 'following' data from the database.
  */
-public class FollowDAO {
+public class FollowDAO implements FollowDAOInterface {
 
     /**
      * Gets the count of users from the database that the user specified is following. The
@@ -105,7 +107,7 @@ public class FollowDAO {
      *
      * @return the followees.
      */
-    List<User> getDummyFollowees() {
+    public List<User> getDummyFollowees() {
         return getFakeData().getFakeUsers();
     }
 

@@ -19,12 +19,18 @@ import edu.byu.cs.tweeter.model.net.response.GetFollowingCountResponse;
 import edu.byu.cs.tweeter.model.net.response.IsFollowerResponse;
 import edu.byu.cs.tweeter.model.net.response.UnfollowResponse;
 import edu.byu.cs.tweeter.server.dao.FollowDAO;
+import edu.byu.cs.tweeter.server.dao.FollowDAOInterface;
 import edu.byu.cs.tweeter.util.Pair;
 
 /**
  * Contains the business logic for getting the users a user is following.
  */
 public class FollowService {
+    FollowDAOInterface dao;
+
+    public FollowService(FollowDAOInterface dao) {
+        this.dao = dao;
+    }
 
     /**
      * Returns the users that the user specified in the request is following. Uses information in
@@ -125,7 +131,7 @@ public class FollowService {
      *
      * @return the instance.
      */
-    FollowDAO getFollowingDAO() {
-        return new FollowDAO();
+    FollowDAOInterface getFollowingDAO() {
+        return dao;
     }
 }
