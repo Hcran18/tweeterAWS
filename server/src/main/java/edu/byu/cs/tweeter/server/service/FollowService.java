@@ -1,5 +1,7 @@
 package edu.byu.cs.tweeter.server.service;
 
+import com.google.inject.Inject;
+
 import java.util.List;
 import java.util.Random;
 
@@ -19,12 +21,20 @@ import edu.byu.cs.tweeter.model.net.response.GetFollowingCountResponse;
 import edu.byu.cs.tweeter.model.net.response.IsFollowerResponse;
 import edu.byu.cs.tweeter.model.net.response.UnfollowResponse;
 import edu.byu.cs.tweeter.server.dao.FollowDAO;
+import edu.byu.cs.tweeter.server.dao.FollowDAOInterface;
 import edu.byu.cs.tweeter.util.Pair;
 
 /**
  * Contains the business logic for getting the users a user is following.
  */
 public class FollowService {
+
+    FollowDAOInterface dao;
+
+    @Inject
+    public FollowService(FollowDAOInterface dao) {
+        this.dao = dao;
+    }
 
     /**
      * Returns the users that the user specified in the request is following. Uses information in
@@ -43,7 +53,7 @@ public class FollowService {
             throw new RuntimeException("[Bad Request] Request needs to have a positive limit");
         }
 
-        Pair<List<User>, Boolean> pair = getFollowingDAO().getFollowees(request.getFollowerAlias(), request.getLimit(), request.getLastFolloweeAlias());
+        Pair<List<User>, Boolean> pair = dao.getFollowees(request.getFollowerAlias(), request.getLimit(), request.getLastFolloweeAlias());
         return new FollowingResponse(pair.getFirst(), pair.getSecond());
     }
 
@@ -56,7 +66,7 @@ public class FollowService {
             throw new RuntimeException("[Bad Request] Request needs to have a positive limit");
         }
 
-        Pair<List<User>, Boolean> pair = getFollowingDAO().getFollowers(request.getTargetUserAlias(), request.getLimit(), request.getLastFollowerAlias());
+        Pair<List<User>, Boolean> pair = dao.getFollowers(request.getTargetUserAlias(), request.getLimit(), request.getLastFollowerAlias());
         return new FollowerResponse(pair.getFirst(), pair.getSecond());
     }
 

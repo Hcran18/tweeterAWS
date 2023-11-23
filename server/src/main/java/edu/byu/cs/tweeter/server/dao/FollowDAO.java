@@ -10,7 +10,7 @@ import edu.byu.cs.tweeter.util.Pair;
 /**
  * A DAO for accessing 'following' data from the database.
  */
-public class FollowDAO {
+public class FollowDAO implements FollowDAOInterface {
 
     /**
      * Gets the count of users from the database that the user specified is following. The
@@ -105,7 +105,7 @@ public class FollowDAO {
      *
      * @return the followees.
      */
-    List<User> getDummyFollowees() {
+    private List<User> getDummyFollowees() {
         return getFakeData().getFakeUsers();
     }
 
@@ -115,7 +115,7 @@ public class FollowDAO {
      *
      * @return a {@link FakeData} instance.
      */
-    FakeData getFakeData() {
+    private FakeData getFakeData() {
         return FakeData.getInstance();
     }
 }
