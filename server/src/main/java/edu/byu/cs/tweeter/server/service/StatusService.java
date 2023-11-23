@@ -1,5 +1,7 @@
 package edu.byu.cs.tweeter.server.service;
 
+import com.google.inject.Inject;
+
 import java.util.List;
 
 import edu.byu.cs.tweeter.model.domain.Status;
@@ -9,16 +11,27 @@ import edu.byu.cs.tweeter.model.net.request.PostStatusRequest;
 import edu.byu.cs.tweeter.model.net.response.GetFeedResponse;
 import edu.byu.cs.tweeter.model.net.response.GetStoryResponse;
 import edu.byu.cs.tweeter.model.net.response.PostStatusResponse;
+import edu.byu.cs.tweeter.server.dao.StatusDAO;
+import edu.byu.cs.tweeter.server.dao.StatusDAOInterface;
 import edu.byu.cs.tweeter.util.FakeData;
 import edu.byu.cs.tweeter.util.Pair;
 
 public class StatusService {
+    StatusDAOInterface dao;
+
+    @Inject
+    public StatusService(StatusDAOInterface dao) {
+     this.dao = dao;
+    }
+
     public PostStatusResponse postStatus(PostStatusRequest request) {
         if (request.getAuthToken() == null) {
             throw new RuntimeException("[Bad Request] Request needs to have an Authtoken");
         } else if (request.getStatus() == null) {
             throw new RuntimeException("[Bad Request] Request needs to have a status");
         }
+
+        dao.postStatus(request.getAuthToken(), request.getStatus());
 
         return new PostStatusResponse();
     }
@@ -32,7 +45,8 @@ public class StatusService {
             throw new RuntimeException("[Bad Request] Request needs to have an Authtoken");
         }
 
-        Pair<List<Status>, Boolean> pair = getFakeData().getPageOfStatus(request.getLastStatus(), request.getLimit());
+        Pair<List<Status>, Boolean> pair = dao.getStory(request.getTargetUser(), request.getLastStatus(), request.getLimit());
+
         return new GetStoryResponse(pair.getFirst(), pair.getSecond());
     }
 
@@ -45,11 +59,8 @@ public class StatusService {
             throw new RuntimeException("[Bad Request] Request needs to have an Authtoken");
         }
 
-        Pair<List<Status>, Boolean> pair = getFakeData().getPageOfStatus(request.getLastStatus(), request.getLimit());
-        return new GetFeedResponse(pair.getFirst(), pair.getSecond());
-    }
+        Pair<List<Status>, Boolean> pair = dao.getFeed(request.getTargetUser(), request.getLastStatus(), request.getLimit());
 
-    FakeData getFakeData() {
-        return FakeData.getInstance();
+        return new GetFeedResponse(pair.getFirst(), pair.getSecond());
     }
 }

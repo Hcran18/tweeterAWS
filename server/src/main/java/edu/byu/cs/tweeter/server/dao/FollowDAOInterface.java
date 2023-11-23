@@ -15,7 +15,7 @@ public interface FollowDAOInterface {
      * @param follower the User whose count of how many following is desired.
      * @return said count.
      */
-    public Integer getFolloweeCount(User follower);
+    Integer getFolloweeCount(User follower);
 
     /**
      * Gets the users from the database that the user specified in the request is following. Uses
