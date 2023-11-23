@@ -28,11 +28,6 @@ import edu.byu.cs.tweeter.util.Pair;
  * Contains the business logic for getting the users a user is following.
  */
 public class FollowService {
-    FollowDAOInterface dao;
-
-    public FollowService(FollowDAOInterface dao) {
-        this.dao = dao;
-    }
 
     FollowDAOInterface dao;
 
@@ -140,7 +135,7 @@ public class FollowService {
      *
      * @return the instance.
      */
-    FollowDAOInterface getFollowingDAO() {
-        return dao;
+    FollowDAO getFollowingDAO() {
+        return new FollowDAO();
     }
 }
