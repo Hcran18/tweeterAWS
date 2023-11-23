@@ -7,5 +7,6 @@ public class DAOModule extends AbstractModule {
     protected void configure() {
         bind(FollowDAOInterface.class).to(FollowDAO.class);
         bind(StatusDAOInterface.class).to(StatusDAO.class);
+        bind(UserDAOInterface.class).to(UserDAO.class);
     }
 }
