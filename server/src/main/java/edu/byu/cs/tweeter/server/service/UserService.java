@@ -63,13 +63,18 @@ public class UserService {
             throw new RuntimeException("[Bad Request] Missing an image");
         }
 
-        dao.putUser(request.getUsername(), request.getPassword(), request.getFirstName(), request.getLastName(), request.getImage());
-        User user = dao.getUserByUsername(request.getUsername());
-        //User user = getDummyUser();
-        dao.putAuthToken(request.getUsername());
-        AuthToken authToken = dao.getAuthToken(request.getUsername());
-        //AuthToken authToken = getDummyAuthToken();
-        return new RegisterResponse(user, authToken);
+        try {
+            dao.putUser(request.getUsername(), request.getPassword(), request.getFirstName(), request.getLastName(), request.getImage());
+            User user = dao.getUserByUsername(request.getUsername());
+            //User user = getDummyUser();
+            dao.putAuthToken(request.getUsername());
+            AuthToken authToken = dao.getAuthToken(request.getUsername());
+            //AuthToken authToken = getDummyAuthToken();
+            return new RegisterResponse(user, authToken);
+        }
+        catch (Exception ex) {
+            throw new RuntimeException("[Bad Request] Unable to store data");
+        }
     }
 
     public GetUserResponse getUser(GetUserRequest request) {

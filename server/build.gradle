@@ -21,6 +21,7 @@ dependencies {
     implementation group: 'software.amazon.awssdk', name: 'dynamodb', version: '2.20.47'
     implementation group: 'software.amazon.awssdk', name: 'dynamodb-enhanced', version: '2.20.47'
     implementation group: 'com.google.inject', name: 'guice', version: '5.1.0'
+    implementation group: 'com.amazonaws', name: 'aws-java-sdk-s3', version: '1.12.565'
 
     // Testing related dependencies
 

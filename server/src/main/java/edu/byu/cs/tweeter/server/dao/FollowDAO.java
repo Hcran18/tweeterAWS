@@ -20,7 +20,8 @@ public class FollowDAO implements FollowDAOInterface {
      * @return said count.
      */
     public Integer getFolloweeCount(User follower) {
-        // TODO: uses the dummy data.  Replace with a real implementation.
+        //TODO: uses the dummy data.  Replace with a real implementation.
+        //TODO: Accesses the follows table
         assert follower != null;
         return getDummyFollowees().size();
     }
@@ -38,7 +39,8 @@ public class FollowDAO implements FollowDAOInterface {
      * @return the followees.
      */
     public Pair<List<User>, Boolean> getFollowees(String followerAlias, int limit, String lastFolloweeAlias) {
-        // TODO: Generates dummy data. Replace with a real implementation.
+        //TODO: Generates dummy data. Replace with a real implementation.
+        //TODO: Access the follows table
         assert limit > 0;
         assert followerAlias != null;
 
@@ -93,6 +95,7 @@ public class FollowDAO implements FollowDAOInterface {
     }
 
     public Pair<List<User>, Boolean> getFollowers(String targetUserAlias, int limit, String lastFollowerAlias) {
+        //TODO: Accesses the follows table
         User targetUser = getFakeData().findUserByAlias(targetUserAlias);
         User lastFollower = getFakeData().findUserByAlias(lastFollowerAlias);
         
