@@ -31,12 +31,20 @@ public class UserService {
             throw new RuntimeException("[Bad Request] Missing a password");
         }
 
-        // TODO: Generates dummy data. Replace with a real implementation.
-        User user = dao.getUserByUsername(request.getUsername());
-        //User user = getDummyUser();
-        AuthToken authToken = dao.getAuthToken(request.getUsername());
-        //AuthToken authToken = getDummyAuthToken();
-        return new LoginResponse(user, authToken);
+        //TODO: check if the password is correct
+        Boolean correctPassword = dao.isCorrectPassword(request.getUsername(), request.getPassword());
+
+        if (correctPassword) {
+            User user = dao.getUserByUsername(request.getUsername());
+            //User user = getDummyUser();
+            dao.putAuthToken(request.getUsername());
+            AuthToken authToken = dao.getAuthToken(request.getUsername());
+            //AuthToken authToken = getDummyAuthToken();
+            return new LoginResponse(user, authToken);
+        }
+        else {
+            throw new RuntimeException("[Bad Request] Incorrect Password");
+        }
     }
 
     public LogoutResponse logout(LogoutRequest request) {
@@ -44,7 +52,6 @@ public class UserService {
             throw new RuntimeException("[Bad Request] Missing an Authtoken");
         }
 
-        //TODO: Should delete the Authtoken and then return the response
         dao.deleteAuthToken(request.getAuthToken());
 
         return new LogoutResponse();

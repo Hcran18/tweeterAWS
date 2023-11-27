@@ -10,24 +10,36 @@ import java.io.ByteArrayInputStream;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Base64;
+import java.util.Objects;
+import java.util.UUID;
 import java.util.logging.Logger;
 
 import edu.byu.cs.tweeter.model.domain.AuthToken;
 import edu.byu.cs.tweeter.model.domain.User;
+import edu.byu.cs.tweeter.server.dao.data.AuthTokens;
 import edu.byu.cs.tweeter.server.dao.data.Users;
-import edu.byu.cs.tweeter.util.FakeData;
+import software.amazon.awssdk.core.pagination.sync.SdkIterable;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbEnhancedClient;
+import software.amazon.awssdk.enhanced.dynamodb.DynamoDbIndex;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbTable;
 import software.amazon.awssdk.enhanced.dynamodb.Key;
 import software.amazon.awssdk.enhanced.dynamodb.TableSchema;
+import software.amazon.awssdk.enhanced.dynamodb.model.Page;
+import software.amazon.awssdk.enhanced.dynamodb.model.PageIterable;
+import software.amazon.awssdk.enhanced.dynamodb.model.QueryConditional;
+import software.amazon.awssdk.enhanced.dynamodb.model.QueryEnhancedRequest;
+import software.amazon.awssdk.enhanced.dynamodb.model.ScanEnhancedRequest;
 import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
 import software.amazon.awssdk.services.dynamodb.model.DynamoDbException;
 
 public class UserDAO implements UserDAOInterface {
     private static final Logger LOGGER = Logger.getLogger(UserDAO.class.getName());
-    private static final String TableName = "users";
+    private static final String UsersTableName = "users";
+    private static final String AuthTokenTableName = "authToken";
+    public static final String AuthTokenIndex = "alias-index";
     private static DynamoDbClient dynamoDbClient;
+
     private static DynamoDbClient getClient() {
 
         if (dynamoDbClient == null) {
@@ -45,9 +57,7 @@ public class UserDAO implements UserDAOInterface {
 
     @Override
     public User getUserByUsername(String username) {
-        //TODO: Access the users table to retrieve the
-        // needed info to create a new user object to return
-        DynamoDbTable<Users> table = enhancedClient.table(TableName, TableSchema.fromBean(Users.class));
+        DynamoDbTable<Users> table = enhancedClient.table(UsersTableName, TableSchema.fromBean(Users.class));
         Key key = Key.builder()
                 .partitionValue(username)
                 .build();
@@ -59,17 +69,53 @@ public class UserDAO implements UserDAOInterface {
 
     @Override
     public AuthToken getAuthToken(String username) {
-        //TODO: Access the authToken table to retrieve the
-        // needed info to create a new authToken object to return
-        
-        return getDummyAuthToken();
+        try {
+            LOGGER.info("Attempting to retrieve authToken for username: " + username);
+            DynamoDbIndex<AuthTokens> index = enhancedClient.table(AuthTokenTableName, TableSchema.fromBean(AuthTokens.class)).index(AuthTokenIndex);
+
+            Key key = Key.builder()
+                    .partitionValue(username)
+                    .build();
+
+            QueryEnhancedRequest.Builder requestBuilder = QueryEnhancedRequest.builder()
+                    .queryConditional(QueryConditional.keyEqualTo(key));
+
+            QueryEnhancedRequest request = requestBuilder
+                    .scanIndexForward(true)
+                    .build();
+
+            SdkIterable<Page<AuthTokens>> sdkIterable = index.query(request);
+            PageIterable<AuthTokens> pages = PageIterable.create(sdkIterable);
+
+            AuthTokens authToken = null;
+
+            for (Page<AuthTokens> page : pages) {
+                for (AuthTokens tokens : page.items()) {
+                    authToken = tokens;
+                    // Assuming we only need the first item associated with the username
+                    break;
+                }
+                if (authToken != null) {
+                    // Found the required AuthToken for the username
+                    break;
+                }
+            }
+
+            if (authToken != null) {
+                LOGGER.info(authToken.getAuthToken());
+                return new AuthToken(authToken.getAuthToken(), authToken.getTimestamp());
+            } else {
+                throw new RuntimeException("[Bad Request] authToken does not exist");
+            }
+        } catch (DynamoDbException ex) {
+            LOGGER.severe("Error retrieving AuthToken for username: " + username + ex.getMessage());
+            throw new RuntimeException("Error retrieving AuthToken");
+        }
     }
 
     @Override
     public User getUserByAlias(String alias) {
-        //TODO: Access the users table to retrieve the
-        // needed info to create a new user object to return
-        DynamoDbTable<Users> table = enhancedClient.table(TableName, TableSchema.fromBean(Users.class));
+        DynamoDbTable<Users> table = enhancedClient.table(UsersTableName, TableSchema.fromBean(Users.class));
         Key key = Key.builder()
                 .partitionValue(alias)
                 .build();
@@ -81,14 +127,20 @@ public class UserDAO implements UserDAOInterface {
 
     @Override
     public void deleteAuthToken(AuthToken authToken) {
-        //TODO: Delete AuthToken and all expired AuthTokens from table
+        DynamoDbTable<AuthTokens> table = enhancedClient.table(AuthTokenTableName, TableSchema.fromBean(AuthTokens.class));
+        Key key = Key.builder()
+                .partitionValue(authToken.getToken())
+                .build();
+
+        table.deleteItem(key);
+
+        deleteAllExpiredAuthTokens();
     }
 
     @Override
     public void putUser(String username, String password, String firstName, String lastName, String image) {
-        //TODO: Put new user into table
         LOGGER.info("preparing table");
-        DynamoDbTable<Users> table = enhancedClient.table(TableName, TableSchema.fromBean(Users.class));
+        DynamoDbTable<Users> table = enhancedClient.table(UsersTableName, TableSchema.fromBean(Users.class));
 
         Users newUser = new Users();
 
@@ -112,6 +164,47 @@ public class UserDAO implements UserDAOInterface {
             LOGGER.severe("Error putting user in DynamoDB: " + e.getMessage());
             e.printStackTrace();
             // Handle the exception accordingly based on your application's logic
+        }
+    }
+
+    @Override
+    public void putAuthToken(String username) {
+        LOGGER.info("Attempting to put authToken");
+        DynamoDbTable<AuthTokens> table = enhancedClient.table(AuthTokenTableName,
+                TableSchema.fromBean(AuthTokens.class));
+
+        String newAuthToken = generateAuthToken();
+        long timestamp = System.currentTimeMillis();
+
+        try {
+            AuthTokens authTokens = new AuthTokens();
+            authTokens.setAuthToken(newAuthToken);
+            authTokens.setAlias(username);
+            authTokens.setTimestamp(timestamp);
+
+            table.putItem(authTokens);
+            LOGGER.info("AuthToken added successfully.");
+        } catch (DynamoDbException ex) {
+            LOGGER.severe("Unable to put the authToken: " + ex.getMessage());
+            ex.printStackTrace();
+        }
+    }
+
+    @Override
+    public Boolean isCorrectPassword(String username, String password) {
+        DynamoDbTable<Users> table = enhancedClient.table(UsersTableName, TableSchema.fromBean(Users.class));
+        Key key = Key.builder()
+                .partitionValue(username)
+                .build();
+
+        Users users = table.getItem(key);
+        String hashedPassword = getSecurePassword(password);
+
+        if (Objects.equals(users.getPassword(), hashedPassword)) {
+            return true;
+        }
+        else {
+            return false;
         }
     }
 
@@ -150,43 +243,40 @@ public class UserDAO implements UserDAOInterface {
             return sb.toString();
         } catch (NoSuchAlgorithmException e) {
             e.printStackTrace();
+            throw new RuntimeException("Error creating secure password");
         }
-        return "FAILED TO HASH PASSWORD";
     }
 
-    @Override
-    public void putAuthToken(String username) {
-        //TODO: Put new Authtoken into Table
-
+    private static String generateAuthToken() {
+        LOGGER.info("Creating authToken");
+        return UUID.randomUUID().toString();
     }
 
-    /**
-     * Returns the dummy user to be returned by the login operation.
-     * This is written as a separate method to allow mocking of the dummy user.
-     *
-     * @return a dummy user.
-     */
-    User getDummyUser() {
-        return getFakeData().getFirstUser();
-    }
+    private void deleteAllExpiredAuthTokens() {
+        //TODO: read in and delete all expired AuthTokens ie authtokens older than 5 minutes
+        try {
+            DynamoDbTable<AuthTokens> table = enhancedClient.table(AuthTokenTableName, TableSchema.fromBean(AuthTokens.class));
 
-    /**
-     * Returns the dummy auth token to be returned by the login operation.
-     * This is written as a separate method to allow mocking of the dummy auth token.
-     *
-     * @return a dummy auth token.
-     */
-    AuthToken getDummyAuthToken() {
-        return getFakeData().getAuthToken();
-    }
+            // Calculate the timestamp for five minutes ago
+            long fiveMinutesAgo = System.currentTimeMillis() - (5 * 60 * 1000);
 
-    /**
-     * Returns the {@link FakeData} object used to generate dummy users and auth tokens.
-     * This is written as a separate method to allow mocking of the {@link FakeData}.
-     *
-     * @return a {@link FakeData} instance.
-     */
-    FakeData getFakeData() {
-        return FakeData.getInstance();
+            ScanEnhancedRequest scanRequest = ScanEnhancedRequest.builder().build();
+            SdkIterable<Page<AuthTokens>> sdkIterable = table.scan(scanRequest);
+            PageIterable<AuthTokens> pages = PageIterable.create(sdkIterable);
+
+            for (Page<AuthTokens> page : pages) {
+                for (AuthTokens token : page.items()) {
+                    if (token.getTimestamp() < fiveMinutesAgo) {
+                        // Token is expired, delete it
+                        Key key = Key.builder().partitionValue(token.getAuthToken()).build();
+                        table.deleteItem(key);
+                        LOGGER.info("Expired authToken deleted: " + token.getAuthToken());
+                    }
+                }
+            }
+        } catch (DynamoDbException ex) {
+            LOGGER.severe("Error deleting expired AuthTokens: " + ex.getMessage());
+            throw new RuntimeException("Error deleting expired AuthTokens");
+        }
     }
 }

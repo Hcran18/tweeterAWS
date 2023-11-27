@@ -14,4 +14,6 @@ public interface UserDAOInterface {
     void putUser(String username, String password, String firstName, String lastName, String image);
 
     void putAuthToken(String username);
+
+    Boolean isCorrectPassword(String password, String requestPassword);
 }

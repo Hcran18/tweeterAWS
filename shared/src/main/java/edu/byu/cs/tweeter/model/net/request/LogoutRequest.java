@@ -5,6 +5,8 @@ import edu.byu.cs.tweeter.model.domain.AuthToken;
 public class LogoutRequest {
     private AuthToken authToken;
 
+    public LogoutRequest() {}
+
     public LogoutRequest (AuthToken authToken) {
         this.authToken = authToken;
     }
