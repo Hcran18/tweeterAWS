@@ -11,6 +11,7 @@ import edu.byu.cs.tweeter.model.domain.User;
 import edu.byu.cs.tweeter.server.dao.data.AuthTokens;
 import edu.byu.cs.tweeter.server.dao.data.DataPage;
 import edu.byu.cs.tweeter.server.dao.data.Feeds;
+import edu.byu.cs.tweeter.server.dao.data.Follows;
 import edu.byu.cs.tweeter.server.dao.data.Stories;
 import edu.byu.cs.tweeter.util.FakeData;
 import edu.byu.cs.tweeter.util.Pair;
@@ -34,6 +35,8 @@ public class StatusDAO implements StatusDAOInterface {
     private static final String FeedTableName = "feed";
     private static final String StoryAliasAttr = "posterAlias";
     private static final String StoryPostAttr = "post";
+    private static final String FeedAliasAttr = "recieverAlias";
+    private static final String FeedPostAttr = "post";
 
     private static DynamoDbClient dynamoDbClient;
 
@@ -79,18 +82,6 @@ public class StatusDAO implements StatusDAOInterface {
             newPost.setMentions(status.getMentions());
 
             storyTable.putItem(newPost);
-
-            DynamoDbTable<Feeds> feedTable = enhancedClient.table(FeedTableName, TableSchema.fromBean(Feeds.class));
-
-            Feeds newFeed = new Feeds();
-
-            newFeed.setRecieverAlias(receivedAuthToken.getAlias());
-            newFeed.setPostedTimestamp(timestamp);
-            newFeed.setPost(status.getPost());
-            newFeed.setUrls(status.getUrls());
-            newFeed.setMentions(status.getMentions());
-
-            feedTable.putItem(newFeed);
         }
         catch (DynamoDbException ex) {
             ex.printStackTrace();
@@ -100,8 +91,6 @@ public class StatusDAO implements StatusDAOInterface {
 
     @Override
     public Pair<List<Status>, Boolean> getStory(User targetUser, Status lastStatus, int limit) {
-        //TODO: Access the story table to retrieve needed data
-        // response needs a list of statuses and has more pages Boolean
         try {
             LOGGER.info("creating table");
             DynamoDbTable<Stories> table = enhancedClient.table(StoryTableName, TableSchema.fromBean(Stories.class));
@@ -151,8 +140,6 @@ public class StatusDAO implements StatusDAOInterface {
                         }
                     });
 
-            //TODO: get and return the first amount of stories and the boolean of hasMorePages
-
             return new Pair<>(result.getValues(), result.isHasMorePages());
         }
         catch (DynamoDbException ex) {
@@ -165,8 +152,77 @@ public class StatusDAO implements StatusDAOInterface {
     public Pair<List<Status>, Boolean> getFeed(User targetUser, Status lastStatus, int limit) {
         //TODO: Access the feed table to retrieve needed data
         // response needs a list of statuses and has more pages Boolean
+        try {
+            DynamoDbTable<Feeds> table = enhancedClient.table(FeedTableName, TableSchema.fromBean(Feeds.class));
+            Key key = Key.builder()
+                    .partitionValue(targetUser.getAlias())
+                    .build();
 
-        return getFakeData().getPageOfStatus(lastStatus, limit);
+            QueryEnhancedRequest.Builder requestBuilder = QueryEnhancedRequest.builder()
+                    .queryConditional(QueryConditional.keyEqualTo(key))
+                    .limit(limit);
+
+            if (lastStatus != null && isNonEmptyString(lastStatus.getPost())) {
+                // Build the Exclusive Start Key
+                Map<String, AttributeValue> startKey = new HashMap<>();
+
+                startKey.put(FeedAliasAttr, AttributeValue.builder().s(targetUser.getAlias()).build());
+                startKey.put(FeedPostAttr, AttributeValue.builder().s(lastStatus.getPost()).build());
+
+                requestBuilder.exclusiveStartKey(startKey);
+            }
+
+            QueryEnhancedRequest request = requestBuilder
+                    .scanIndexForward(true)
+                    .build();
+
+            DataPage<Status> result = new DataPage<>();
+
+            PageIterable<Feeds> pages = table.query(request);
+            pages.stream()
+                    .limit(1)
+                    .forEach((Page<Feeds> page) -> {
+                        result.setHasMorePages(page.lastEvaluatedKey() != null);
+                        for (Feeds story : page.items()) {
+                            // Convert DynamoDB Stories to Status
+                            Status status = new Status();
+                            status.setUser(targetUser);
+                            status.post = story.getPost();
+                            status.urls = story.getUrls();
+                            status.mentions = story.getMentions();
+                            status.timestamp = story.getPostedTimestamp();
+
+                            // Add status to the result
+                            result.getValues().add(status);
+                        }
+                    });
+
+            return new Pair<>(result.getValues(), result.isHasMorePages());
+        }
+        catch (DynamoDbException ex) {
+            ex.printStackTrace();
+            throw new RuntimeException("[Bad Request] error with getting feed" + ex.getMessage());
+        }
+
+        //return getFakeData().getPageOfStatus(lastStatus, limit);
+    }
+
+    @Override
+    public void postFeed(String alias, Status status) {
+        //TODO: post the feed
+        DynamoDbTable<Feeds> table = enhancedClient.table(FeedTableName, TableSchema.fromBean(Feeds.class));
+
+        Feeds newFeed = new Feeds();
+
+        long timestamp = System.currentTimeMillis();
+
+        newFeed.setRecieverAlias(alias);
+        newFeed.setPostedTimestamp(timestamp);
+        newFeed.setPost(status.getPost());
+        newFeed.setUrls(status.getUrls());
+        newFeed.setMentions(status.getMentions());
+
+        table.putItem(newFeed);
     }
 
     private static boolean isNonEmptyString(String value) {

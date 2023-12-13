@@ -3,6 +3,7 @@ package edu.byu.cs.tweeter.server.dao;
 import java.util.ArrayList;
 import java.util.List;
 
+import edu.byu.cs.tweeter.model.domain.AuthToken;
 import edu.byu.cs.tweeter.model.domain.User;
 import edu.byu.cs.tweeter.util.FakeData;
 import edu.byu.cs.tweeter.util.Pair;
@@ -16,6 +17,8 @@ public interface FollowDAOInterface {
      * @return said count.
      */
     Integer getFolloweeCount(User follower);
+
+    Integer getFollowersCount(User follower);
 
     /**
      * Gets the users from the database that the user specified in the request is following. Uses
@@ -32,5 +35,11 @@ public interface FollowDAOInterface {
     Pair<List<User>, Boolean> getFollowees(String followerAlias, int limit, String lastFolloweeAlias);
 
     Pair<List<User>, Boolean> getFollowers(String targetUserAlias, int limit, String lastFollowerAlias);
+
+    void follow(AuthToken authToken, User userToFollow);
+
+    void unFollow(AuthToken authToken, User userToUnfollow);
+
+    Boolean isFollower(User follower, User followee);
 
 }

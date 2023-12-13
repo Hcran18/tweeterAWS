@@ -1,6 +1,6 @@
 package edu.byu.cs.tweeter.server.dao.data;
 
-import edu.byu.cs.tweeter.server.dao.FollowsDAO;
+import edu.byu.cs.tweeter.server.dao.FollowDAO;
 import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.*;
 
 @DynamoDbBean
@@ -27,7 +27,7 @@ public class Follows {
     }
 
     @DynamoDbPartitionKey
-    @DynamoDbSecondarySortKey(indexNames = FollowsDAO.IndexName)
+    @DynamoDbSecondarySortKey(indexNames = FollowDAO.FollowIndexName)
     public String getFollower_handle() {
         return follower_handle;
     }
@@ -37,7 +37,7 @@ public class Follows {
     }
 
     @DynamoDbSortKey
-    @DynamoDbSecondaryPartitionKey(indexNames = FollowsDAO.IndexName)
+    @DynamoDbSecondaryPartitionKey(indexNames = FollowDAO.FollowIndexName)
     public String getFollowee_handle() {
         return followee_handle;
     }

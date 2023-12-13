@@ -3,6 +3,7 @@ package edu.byu.cs.tweeter.client.model.service.backgroundTask.handler;
 import android.os.Handler;
 import android.os.Looper;
 import android.os.Message;
+import android.provider.Settings;
 
 import androidx.annotation.NonNull;
 

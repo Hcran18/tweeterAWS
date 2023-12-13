@@ -4,6 +4,7 @@ import com.google.inject.Inject;
 
 import java.util.List;
 import java.util.Random;
+import java.util.logging.Logger;
 
 import edu.byu.cs.tweeter.model.domain.User;
 import edu.byu.cs.tweeter.model.net.request.FollowRequest;
@@ -28,6 +29,7 @@ import edu.byu.cs.tweeter.util.Pair;
  * Contains the business logic for getting the users a user is following.
  */
 public class FollowService {
+    private static final Logger LOGGER = Logger.getLogger(FollowService.class.getName());
 
     FollowDAOInterface dao;
 
@@ -81,7 +83,10 @@ public class FollowService {
             throw new RuntimeException("[Bad Request] Request needs to have an Authtoken");
         }
 
-        return new IsFollowerResponse(new Random().nextInt() > 0);
+        Boolean isFollower = dao.isFollower(request.getFollower(), request.getFollowee());
+        LOGGER.info(String.valueOf(isFollower));
+
+        return new IsFollowerResponse(isFollower);
     }
 
     public UnfollowResponse unfollow(UnfollowRequest request) {
@@ -90,6 +95,8 @@ public class FollowService {
         } else if (request.getAuthToken() == null) {
             throw new RuntimeException("[Bad Request] Request needs to have an Authtoken");
         }
+
+        dao.unFollow(request.getAuthToken(), request.getFollowee());
 
         return new UnfollowResponse();
     }
@@ -101,6 +108,8 @@ public class FollowService {
             throw new RuntimeException("[Bad Request] Request needs to have an Authtoken");
         }
 
+        dao.follow(request.getAuthToken(), request.getFollowee());
+
         return new FollowResponse();
     }
 
@@ -111,7 +120,7 @@ public class FollowService {
             throw new RuntimeException("[Bad Request] Request needs to have an Authtoken");
         }
 
-        int count = 20;
+        int count = dao.getFollowersCount(request.getTargetUser());
 
         return new GetFollowersCountResponse(true, count);
     }
@@ -123,7 +132,8 @@ public class FollowService {
             throw new RuntimeException("[Bad Request] Request needs to have an Authtoken");
         }
 
-        int count = 20;
+
+        int count = dao.getFolloweeCount(request.getTargetUser());
 
         return new GetFollowingCountResponse(true, count);
     }

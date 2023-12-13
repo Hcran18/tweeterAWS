@@ -13,4 +13,6 @@ public interface StatusDAOInterface {
     Pair<List<Status>, Boolean> getStory(User targetUser, Status lastStatus, int limit);
 
     Pair<List<Status>, Boolean> getFeed(User targetUser, Status lastStatus, int limit);
+
+    void postFeed(String alias, Status status);
 }

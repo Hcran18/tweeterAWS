@@ -63,4 +63,14 @@ public class StatusService {
 
         return new GetFeedResponse(pair.getFirst(), pair.getSecond());
     }
+
+    public void postToFeed(String alias, Status status) {
+        if (alias == null) {
+            throw new RuntimeException("[Bad Request] Request needs to have a target user");
+        } else if (status.getPost() == null) {
+            throw new RuntimeException("[Bad Request] Request needs to have a positive limit");
+        }
+
+        dao.postFeed(alias, status);
+    }
 }
